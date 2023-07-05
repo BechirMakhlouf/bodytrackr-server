@@ -25,7 +25,7 @@ app.use((req, res, next) => {
 
 app.use("/", authRouter);
 
-app.use((error, req, res, next) => {
+app.use((error: Error, req, res, next) => {
   res.json({ message: error.message });
 });
 
