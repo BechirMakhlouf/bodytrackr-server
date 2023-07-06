@@ -5,15 +5,24 @@ interface Weight {
   date: Date;
 }
 
-interface UserInfo {
+// remove I from name
+interface IUserInfo {
   sex?: "male" | "female" | "other";
+  heightCm?: number;
+  birthYear?: number;
   weightLog: Weight[];
 }
 
-const userInfoSchema = new mongoose.Schema<UserInfo>({
+const userInfoSchema = new mongoose.Schema<IUserInfo>({
   sex: {
     type: String,
     required: true,
+  },
+  heightCm: {
+    type: Number,
+  },
+  birthYear: {
+    type: Number,
   },
   weightLog: {
     type: [{ weightKg: String, date: Date }],
@@ -23,4 +32,4 @@ const userInfoSchema = new mongoose.Schema<UserInfo>({
 
 const UserInfo = mongoose.model("UserInfo", userInfoSchema);
 
-export default userInfoSchema;
+export default UserInfo;

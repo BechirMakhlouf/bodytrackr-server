@@ -2,13 +2,15 @@ import env from "dotenv";
 env.config();
 import mongoose from "mongoose";
 
+// import UserInfo from "./userInfoModel.js";
 
-interface UserCredentials {
+interface IUserCredentials {
   email: string;
   password: string;
+  userInfoId: mongoose.Types.ObjectId;
 }
 
-const userCredentialsSchema = new mongoose.Schema<UserCredentials>({
+const userCredentialsSchema = new mongoose.Schema<IUserCredentials>({
   email: {
     type: String,
     required: true,
@@ -23,8 +25,14 @@ const userCredentialsSchema = new mongoose.Schema<UserCredentials>({
     min: 8,
     max: 1024,
   },
+
+  userInfoId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "UserInfo",
+    default: "0",
+  }
 });
 
-const UserCredentials = mongoose.model<UserCredentials>("user", userCredentialsSchema);
+const UserCredentials = mongoose.model<IUserCredentials>("UserCredentials", userCredentialsSchema);
 
 export default UserCredentials;
