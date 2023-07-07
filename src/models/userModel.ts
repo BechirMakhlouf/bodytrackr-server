@@ -2,8 +2,6 @@ import env from "dotenv";
 env.config();
 import mongoose from "mongoose";
 
-// import UserInfo from "./userInfoModel.js";
-
 interface IUserCredentials {
   email: string;
   password: string;

@@ -7,6 +7,9 @@ interface Weight {
 
 // remove I from name
 interface IUserInfo {
+  name?: string;
+  firstName?: string;
+  email: string;
   sex?: "male" | "female" | "other";
   heightCm?: number;
   birthYear?: number;
@@ -14,6 +17,18 @@ interface IUserInfo {
 }
 
 const userInfoSchema = new mongoose.Schema<IUserInfo>({
+  name: {
+    type: String,
+    default: "",
+  },
+  firstName: {
+    type: String,
+    default: "",
+  },
+  email: {
+    type: String,
+    required: true,
+  },
   sex: {
     type: String,
     required: true,
@@ -33,3 +48,4 @@ const userInfoSchema = new mongoose.Schema<IUserInfo>({
 const UserInfo = mongoose.model("UserInfo", userInfoSchema);
 
 export default UserInfo;
+export { Weight };

@@ -1,7 +1,7 @@
 import env from "dotenv";
 env.config();
 import { Router } from "express";
-import mongoose, { Error, mongo } from "mongoose";
+import mongoose, { Error } from "mongoose";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
 
@@ -10,20 +10,37 @@ import UserInfo from "../models/userInfoModel.js";
 
 const authRouter = Router();
 
-const areCredentialsValid = (userCredentials: { email:string, password: string}): boolean => {
+const areCredentialsValid = (userCredentials: {
+  email: string;
+  password: string;
+}): boolean => {
   return Boolean(userCredentials.password) && Boolean(userCredentials.email);
 };
 
-const generateAccessToken = (email: string, userInfoId: mongoose.Types.ObjectId): string => {
-  return jwt.sign({ email: email, userInfoId: userInfoId }, process.env.SECRET as string, {
-    expiresIn: "5m",
-  });
+const generateAccessToken = (
+  userCredentialsId: mongoose.Types.ObjectId,
+  userInfoId: mongoose.Types.ObjectId,
+): string => {
+  return jwt.sign(
+    { userCredentialsId: userCredentialsId, userInfoId: userInfoId },
+    process.env.SECRET as string,
+    {
+      expiresIn: "15m",
+    },
+  );
 };
 
-const generateRefreshToken = (email: string, userInfoId: mongoose.Types.ObjectId): string => {
-  return jwt.sign({ email: email }, process.env.REFRESH_SECRET as string, {
-    expiresIn: "15m",
-  });
+const generateRefreshToken = (
+  userCredentialsId: mongoose.Types.ObjectId,
+  userInfoId: mongoose.Types.ObjectId,
+): string => {
+  return jwt.sign(
+    { userCredentialsId: userCredentialsId, userInfoId: userInfoId },
+    process.env.REFRESH_SECRET as string,
+    {
+      expiresIn: "10 days",
+    },
+  );
 };
 
 authRouter.post("/login", async (req, res) => {
@@ -38,17 +55,17 @@ authRouter.post("/login", async (req, res) => {
 
   await mongoose.connect(process.env.MONGODB_URI as string);
 
-  const user = await UserCredentials.findOne({
+  const userCredentials = await UserCredentials.findOne({
     email: userCredentialsSent.email,
   });
 
-  if (!user) {
+  if (!userCredentials) {
     return res.status(401).json({ message: "invalid email or password" });
   }
 
   const isPasswordCorrect = await bcrypt.compare(
     userCredentialsSent.password,
-    user.password
+    userCredentials.password,
   );
 
   if (!isPasswordCorrect) {
@@ -56,8 +73,14 @@ authRouter.post("/login", async (req, res) => {
   }
 
   return res.status(200).json({
-    accessToken: generateAccessToken(userCredentialsSent.email),
-    refreshToken: generateRefreshToken(userCredentialsSent.email),
+    accessToken: generateAccessToken(
+      userCredentials.userInfoId,
+      userCredentials._id,
+    ),
+    refreshToken: generateRefreshToken(
+      userCredentials.userInfoId,
+      userCredentials._id,
+    ),
   });
 });
 
@@ -74,18 +97,19 @@ authRouter.post("/register", async (req, res) => {
 
   await mongoose.connect(process.env.MONGODB_URI as string);
 
-  try {
-    const userInfo = new UserInfo({
-      sex: "other",
-      weightLog: [],
-    })
+  const userInfo = new UserInfo({
+    email: userCredentialsSent.email,
+    sex: "other",
+    weightLog: [],
+  });
 
-    const userCredentials = new UserCredentials({
-      email: userCredentialsSent.email,
-      password: await bcrypt.hash(userCredentialsSent.password, 10),
-      userInfoId: userInfo._id,
-    });
-    
+  const userCredentials = new UserCredentials({
+    email: userCredentialsSent.email,
+    password: await bcrypt.hash(userCredentialsSent.password, 10),
+    userInfoId: userInfo._id,
+  });
+
+  try {
     await userCredentials.save();
     await userInfo.save();
   } catch (error) {
@@ -94,8 +118,14 @@ authRouter.post("/register", async (req, res) => {
   }
 
   return res.status(200).json({
-    accessToken: generateAccessToken(userCredentialsSent.email),
-    refreshToken: generateRefreshToken(userCredentialsSent.email),
+    accessToken: generateAccessToken(
+      userCredentials._id,
+      userCredentials.userInfoId,
+    ),
+    refreshToken: generateRefreshToken(
+      userCredentials._id,
+      userCredentials.userInfoId,
+    ),
   });
 });
 
@@ -103,12 +133,16 @@ authRouter.post("/token", async (req, res) => {
   const refreshToken: string = req.body.refreshToken;
 
   try {
-    const { email } = jwt.verify(
+    const { userCredentialsId, userInfoId } = jwt.verify(
       refreshToken,
-      process.env.REFRESH_SECRET as string
+      process.env.REFRESH_SECRET as string,
     ) as jwt.JwtPayload;
 
-    res.status(200).json({ accessToken: generateRefreshToken(email) });
+    res
+      .status(200)
+      .json({
+        accessToken: generateRefreshToken(userCredentialsId, userInfoId),
+      });
   } catch (error) {
     if (error instanceof jwt.TokenExpiredError) {
       res.status(401).json({ message: error.message });
