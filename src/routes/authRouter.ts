@@ -38,9 +38,16 @@ const generateRefreshToken = (
     { userCredentialsId: userCredentialsId, userInfoId: userInfoId },
     process.env.REFRESH_SECRET as string,
     {
-      expiresIn: "10 days",
+      expiresIn: "15 days",
     },
   );
+};
+
+const expiresInDays = (numberOfDays: number): Date => {
+  const cookieExpirationDate = new Date();
+  cookieExpirationDate.setDate(cookieExpirationDate.getDate() + numberOfDays);
+
+  return cookieExpirationDate;
 };
 
 authRouter.post("/login", async (req, res) => {
@@ -72,12 +79,17 @@ authRouter.post("/login", async (req, res) => {
     return res.status(401).json({ message: "invalid email or password" });
   }
 
-  return res.status(200).json({
-    accessToken: generateAccessToken(
+  res.cookie(
+    "refreshToken",
+    generateRefreshToken(
       userCredentials.userInfoId,
       userCredentials._id,
     ),
-    refreshToken: generateRefreshToken(
+    { signed: true, httpOnly: true, expires: expiresInDays(15) },
+  );
+
+  return res.status(200).json({
+    accessToken: generateAccessToken(
       userCredentials.userInfoId,
       userCredentials._id,
     ),
@@ -117,12 +129,17 @@ authRouter.post("/register", async (req, res) => {
     return;
   }
 
-  return res.status(200).json({
-    accessToken: generateAccessToken(
+  res.cookie(
+    "refreshToken",
+    generateRefreshToken(
       userCredentials._id,
       userCredentials.userInfoId,
     ),
-    refreshToken: generateRefreshToken(
+    { signed: true, httpOnly: true, expires: expiresInDays(15) },
+  );
+
+  return res.status(200).json({
+    accessToken: generateAccessToken(
       userCredentials._id,
       userCredentials.userInfoId,
     ),
