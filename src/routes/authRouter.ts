@@ -7,48 +7,14 @@ import bcrypt from "bcrypt";
 
 import UserCredentials from "../models/userModel.js";
 import UserInfo from "../models/userInfoModel.js";
+import {
+  areCredentialsValid,
+  generateAccessToken,
+  generateRefreshToken,
+  expiresInDays,
+} from "../utils/authUtils.js"
 
 const authRouter = Router();
-
-const areCredentialsValid = (userCredentials: {
-  email: string;
-  password: string;
-}): boolean => {
-  return Boolean(userCredentials.password) && Boolean(userCredentials.email);
-};
-
-const generateAccessToken = (
-  userCredentialsId: mongoose.Types.ObjectId,
-  userInfoId: mongoose.Types.ObjectId,
-): string => {
-  return jwt.sign(
-    { userCredentialsId: userCredentialsId, userInfoId: userInfoId },
-    process.env.SECRET as string,
-    {
-      expiresIn: "15m",
-    },
-  );
-};
-
-const generateRefreshToken = (
-  userCredentialsId: mongoose.Types.ObjectId,
-  userInfoId: mongoose.Types.ObjectId,
-): string => {
-  return jwt.sign(
-    { userCredentialsId: userCredentialsId, userInfoId: userInfoId },
-    process.env.REFRESH_SECRET as string,
-    {
-      expiresIn: "15 days",
-    },
-  );
-};
-
-const expiresInDays = (numberOfDays: number): Date => {
-  const cookieExpirationDate = new Date();
-  cookieExpirationDate.setDate(cookieExpirationDate.getDate() + numberOfDays);
-
-  return cookieExpirationDate;
-};
 
 authRouter.post("/login", async (req, res) => {
   const userCredentialsSent = {
@@ -112,7 +78,6 @@ authRouter.post("/login", async (req, res) => {
       userCredentials.userInfoId,
     ),
     refreshTokenCookie: res.getHeader("set-cookie"),
-    // refreshTokenCookie: "refreshTokenCookie=fuck;"
   });
 });
 
