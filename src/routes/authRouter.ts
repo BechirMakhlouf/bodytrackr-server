@@ -1,7 +1,7 @@
 import env from "dotenv";
 env.config();
 import { Router } from "express";
-import mongoose, { Error } from "mongoose";
+import { Error as mongooseError, connect as mongooseConnect } from "mongoose";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
 
@@ -27,7 +27,7 @@ authRouter.post("/login", async (req, res) => {
     return res.status(401).json({ message: "credentials are invalid!" });
   }
 
-  await mongoose.connect(process.env.MONGODB_URI as string);
+  await mongooseConnect(process.env.MONGODB_URI as string);
 
   const userCredentials = await UserCredentials.findOne({
     email: userCredentialsSent.email,
@@ -92,7 +92,7 @@ authRouter.post("/register", async (req, res) => {
     return;
   }
 
-  await mongoose.connect(process.env.MONGODB_URI as string);
+  await mongooseConnect(process.env.MONGODB_URI as string);
 
   const userInfo = new UserInfo({
     email: userCredentialsSent.email,
@@ -110,7 +110,7 @@ authRouter.post("/register", async (req, res) => {
     await userCredentials.save();
     await userInfo.save();
   } catch (error) {
-    res.status(401).json({ message: (error as Error).message });
+    res.status(401).json({ message: (error as mongooseError).message });
     return;
   }
 
@@ -141,7 +141,7 @@ authRouter.post("/token", async (req, res) => {
         accessToken: generateRefreshToken(userCredentialsId, userInfoId),
       });
   } catch (error) {
-    if (error instanceof Error) {
+    if (error instanceof mongooseError) {
       res.status(401).json({ message: error.message });
     }
   }

@@ -1,8 +1,8 @@
-import dotenv from "dotenv";
-dotenv.config();
+import { config as dotEnvConfig } from "dotenv";
 import express from "express";
 import cookieParser from "cookie-parser";
 import cors from "cors";
+dotEnvConfig();
 
 import authRouter from "./src/routes/authRouter.js";
 import userInfoRouter from "./src/routes/userInfoRouter.js";
