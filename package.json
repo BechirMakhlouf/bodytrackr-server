@@ -7,6 +7,7 @@
   "scripts": {
     "build": "npx tsc",
     "dev": "npx tsc -w & nodemon dist/index.js",
+    "start": "node dist/index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],

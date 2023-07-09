@@ -45,20 +45,6 @@ authRouter.post("/login", async (req, res) => {
   if (!isPasswordCorrect) {
     return res.status(401).json({ message: "invalid email or password" });
   }
-
-  // res.cookie(
-  //   "refreshToken",
-  //   generateRefreshToken(
-  //     userCredentials._id,
-  //     userCredentials.userInfoId,
-  //   ),
-  //   {
-  //     expires: expiresInDays(10),
-  //     httpOnly: true,
-  //     secure: true,
-  //   },
-  // );
-
   // we are sending the cookie in the response body temporarily be aware! CHANGETHIS!
   res.cookie(
     "refreshToken",
@@ -68,6 +54,7 @@ authRouter.post("/login", async (req, res) => {
     ),
     {
       expires: expiresInDays(10),
+      signed: true,
       // httpOnly: true,
       // secure: true,
     },

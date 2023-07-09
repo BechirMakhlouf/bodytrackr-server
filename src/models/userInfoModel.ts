@@ -40,7 +40,7 @@ const userInfoSchema = new mongoose.Schema<IUserInfo>({
     type: Number,
   },
   weightLog: {
-    type: [{ weightKg: String, date: Date }],
+    type: [{ weightKg: String, date: { type: Date, unique: true } }],
     required: true,
   },
 });

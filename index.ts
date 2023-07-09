@@ -14,7 +14,7 @@ const app = express();
 
 app.use(cors());
 app.use(express.json());
-app.use(cookieParser());
+app.use(cookieParser(process.env.COOKIE_SECRET));
 
 app.use("/", authRouter);
 app.use("/", tokenVerificationMiddleware, userInfoRouter);
