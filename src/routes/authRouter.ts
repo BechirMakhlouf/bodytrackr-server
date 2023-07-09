@@ -55,7 +55,8 @@ authRouter.post("/login", async (req, res) => {
     email: req.body.email,
     password: req.body.password,
   };
-
+  console.log(req.cookies);
+  console.log(req.signedCookies);
   if (!areCredentialsValid(userCredentialsSent)) {
     return res.status(401).json({ message: "credentials are invalid!" });
   }
@@ -79,20 +80,39 @@ authRouter.post("/login", async (req, res) => {
     return res.status(401).json({ message: "invalid email or password" });
   }
 
+  // res.cookie(
+  //   "refreshToken",
+  //   generateRefreshToken(
+  //     userCredentials._id,
+  //     userCredentials.userInfoId,
+  //   ),
+  //   {
+  //     expires: expiresInDays(10),
+  //     httpOnly: true,
+  //     secure: true,
+  //   },
+  // );
+
+  // we are sending the cookie in the response body temporarily be aware! CHANGETHIS!
   res.cookie(
     "refreshToken",
     generateRefreshToken(
-      userCredentials.userInfoId,
       userCredentials._id,
+      userCredentials.userInfoId,
     ),
-    { signed: true, httpOnly: true, expires: expiresInDays(15) },
+    {
+      expires: expiresInDays(10),
+      // httpOnly: true,
+      // secure: true,
+    },
   );
-
   return res.status(200).json({
     accessToken: generateAccessToken(
-      userCredentials.userInfoId,
       userCredentials._id,
+      userCredentials.userInfoId,
     ),
+    refreshTokenCookie: res.getHeader("set-cookie"),
+    // refreshTokenCookie: "refreshTokenCookie=fuck;"
   });
 });
 
@@ -129,17 +149,12 @@ authRouter.post("/register", async (req, res) => {
     return;
   }
 
-  res.cookie(
-    "refreshToken",
-    generateRefreshToken(
+  return res.status(200).json({
+    accessToken: generateAccessToken(
       userCredentials._id,
       userCredentials.userInfoId,
     ),
-    { signed: true, httpOnly: true, expires: expiresInDays(15) },
-  );
-
-  return res.status(200).json({
-    accessToken: generateAccessToken(
+    refreshToken: generateRefreshToken(
       userCredentials._id,
       userCredentials.userInfoId,
     ),
@@ -147,7 +162,7 @@ authRouter.post("/register", async (req, res) => {
 });
 
 authRouter.post("/token", async (req, res) => {
-  const refreshToken: string = req.body.refreshToken;
+  const refreshToken: string = req.cookies.refreshToken;
 
   try {
     const { userCredentialsId, userInfoId } = jwt.verify(
@@ -161,9 +176,8 @@ authRouter.post("/token", async (req, res) => {
         accessToken: generateRefreshToken(userCredentialsId, userInfoId),
       });
   } catch (error) {
-    if (error instanceof jwt.TokenExpiredError) {
+    if (error instanceof Error) {
       res.status(401).json({ message: error.message });
-      return;
     }
   }
 });
