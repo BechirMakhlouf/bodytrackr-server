@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response } from "express";
 import jwt from "jsonwebtoken";
 
-export default function tokenVerificationMiddleware(
+export default function tokenHandlerMiddleware(
   req: Request,
   res: Response,
   next: NextFunction,

@@ -3,9 +3,9 @@ dotenv.config();
 import { Router } from "express";
 import mongoose from "mongoose";
 
-import { Weight } from "../models/userInfoModel.js";
+import { IUserInfo, Weight } from "../models/userInfoModel.js";
 import UserInfo from "../models/userInfoModel.js";
-import { sortWeightLog, parseWeightLogSent } from "../utils/userInfoUtils.js";
+import { parseWeightLogSent, sortWeightLog } from "../utils/userInfoUtils.js";
 
 const userInfoRouter = Router();
 
@@ -15,9 +15,21 @@ userInfoRouter.get("/userInfo", async (req, res) => {
   await mongoose.connect(process.env.MONGODB_URI as string);
   const userInfo = await UserInfo.findById(userInfoId);
 
-  res.json(userInfo);
+  res.status(200).json(userInfo);
 });
 // update user info?
+
+userInfoRouter.patch("/userInfo", async (req, res) => {
+  const userInfoId = req.body.userInfoId;
+
+  await mongoose.connect(process.env.MONGODB_URI as string);
+
+  const updatedUserInfo: IUserInfo = req.body;
+  // check updatedUserInfo integrity??
+  await UserInfo.findByIdAndUpdate(userInfoId, updatedUserInfo);
+  
+  res.status(200).json({ "message": "updated successfully"});
+});
 
 userInfoRouter.post("/userInfo/weightLog", async (req, res) => {
   const userInfoId = req.body.userInfoId;
@@ -30,11 +42,11 @@ userInfoRouter.post("/userInfo/weightLog", async (req, res) => {
     throw new Error("User not found");
   }
 
-  const weightLog = parseWeightLogSent(req.body.weightLog);
+  const weightLog: Weight[] = parseWeightLogSent(req.body.weightLog);
   // verify integrity of weight log here!
 
   sortWeightLog(weightLog);
-  
+
   userInfo.weightLog = weightLog;
   await userInfo.save();
 

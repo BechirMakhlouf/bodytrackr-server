@@ -1,7 +1,7 @@
 import env from "dotenv";
 env.config();
 import { Router } from "express";
-import { Error as mongooseError, connect as mongooseConnect } from "mongoose";
+import { connect as mongooseConnect, Error as mongooseError } from "mongoose";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
 
@@ -9,10 +9,10 @@ import UserCredentials from "../models/userModel.js";
 import UserInfo from "../models/userInfoModel.js";
 import {
   areCredentialsValid,
+  expiresInDays,
   generateAccessToken,
   generateRefreshToken,
-  expiresInDays,
-} from "../utils/authUtils.js"
+} from "../utils/authUtils.js";
 
 const authRouter = Router();
 
@@ -21,8 +21,7 @@ authRouter.post("/login", async (req, res) => {
     email: req.body.email,
     password: req.body.password,
   };
-  console.log(req.cookies);
-  console.log(req.signedCookies);
+
   if (!areCredentialsValid(userCredentialsSent)) {
     return res.status(401).json({ message: "credentials are invalid!" });
   }
@@ -45,6 +44,7 @@ authRouter.post("/login", async (req, res) => {
   if (!isPasswordCorrect) {
     return res.status(401).json({ message: "invalid email or password" });
   }
+
   // we are sending the cookie in the response body temporarily be aware! CHANGETHIS!
   res.cookie(
     "refreshToken",
@@ -113,25 +113,24 @@ authRouter.post("/register", async (req, res) => {
   });
 });
 
-authRouter.post("/token", async (req, res) => {
+authRouter.get("/token", async (req, res, next) => {
   const refreshToken: string = req.cookies.refreshToken;
-
-  try {
-    const { userCredentialsId, userInfoId } = jwt.verify(
-      refreshToken,
-      process.env.REFRESH_SECRET as string,
-    ) as jwt.JwtPayload;
-
-    res
-      .status(200)
-      .json({
-        accessToken: generateRefreshToken(userCredentialsId, userInfoId),
-      });
-  } catch (error) {
-    if (error instanceof mongooseError) {
-      res.status(401).json({ message: error.message });
-    }
+  if (!refreshToken) {
+    res.status(401);
+    next(new Error("No refresh token provided."));
+    return;
   }
+
+  const { userCredentialsId, userInfoId } = jwt.verify(
+    refreshToken,
+    process.env.REFRESH_SECRET as string,
+  ) as jwt.JwtPayload;
+
+  res
+    .status(200)
+    .json({
+      accessToken: generateAccessToken(userCredentialsId, userInfoId),
+    });
 });
 
 export default authRouter;

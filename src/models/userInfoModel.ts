@@ -48,4 +48,4 @@ const userInfoSchema = new mongoose.Schema<IUserInfo>({
 const UserInfo = mongoose.model("UserInfo", userInfoSchema);
 
 export default UserInfo;
-export { Weight };
+export { Weight, IUserInfo };
