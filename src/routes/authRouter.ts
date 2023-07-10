@@ -5,7 +5,7 @@ import { connect as mongooseConnect, Error as mongooseError } from "mongoose";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
 
-import UserCredentials from "../models/userModel.js";
+import UserCredentials from "../models/userCredentialsModel.js";
 import UserInfo from "../models/userInfoModel.js";
 import {
   areCredentialsValid,
