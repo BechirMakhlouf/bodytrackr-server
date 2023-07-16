@@ -5,7 +5,6 @@ interface Weight {
   date: Date;
 }
 
-// remove I from name
 interface IUserInfo {
   name?: string;
   firstName?: string;
@@ -13,6 +12,11 @@ interface IUserInfo {
   sex?: "male" | "female" | "other";
   heightCm?: number;
   birthYear?: number;
+  preferences?: {
+    weightUnit?: "metric" | "imperial";
+    lengthUnit?: "metric" | "imperial";
+    darkMode?: boolean;
+  };
   weightLog: Weight[];
 }
 
@@ -39,6 +43,20 @@ const userInfoSchema = new mongoose.Schema<IUserInfo>({
   birthYear: {
     type: Number,
   },
+  preferences: {
+    weightUnit: {
+      type: String,
+      default: "metric",
+    },
+    lengthUnit: {
+      type: String,
+      default: "metric",
+    },
+    darkMode: {
+      type: Boolean,
+      default: false,
+    },
+  },
   weightLog: {
     type: [{ weightKg: String, date: { type: Date, unique: true } }],
     required: true,
@@ -48,4 +66,4 @@ const userInfoSchema = new mongoose.Schema<IUserInfo>({
 const UserInfo = mongoose.model("UserInfo", userInfoSchema);
 
 export default UserInfo;
-export { Weight, IUserInfo };
+export { IUserInfo, Weight };
