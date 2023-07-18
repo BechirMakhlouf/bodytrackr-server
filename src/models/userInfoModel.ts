@@ -1,5 +1,16 @@
 import mongoose from "mongoose";
 
+export enum Unit {
+  Metric = "metric",
+  Imperial = "imperial",
+}
+
+export enum Sex {
+  Male = "male",
+  Female = "female",
+  Other = "other",
+}
+
 interface Weight {
   weightKg: number;
   date: Date;
@@ -35,7 +46,8 @@ const userInfoSchema = new mongoose.Schema<IUserInfo>({
   },
   sex: {
     type: String,
-    required: true,
+    enum: Object.values(Sex),
+    default: Sex.Other,
   },
   heightCm: {
     type: Number,
@@ -46,10 +58,12 @@ const userInfoSchema = new mongoose.Schema<IUserInfo>({
   preferences: {
     weightUnit: {
       type: String,
+      enum: Object.values(Unit),
       default: "metric",
     },
     lengthUnit: {
       type: String,
+      enum: Object.values(Unit),
       default: "metric",
     },
     darkMode: {
