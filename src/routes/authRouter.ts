@@ -84,7 +84,7 @@ authRouter.post("/register", async (req, res) => {
 
   const userInfo = new UserInfo({
     email: userCredentialsSent.email,
-    sex: Sex.other,
+    sex: Sex.Other,
     weightLog: [],
   });
 
