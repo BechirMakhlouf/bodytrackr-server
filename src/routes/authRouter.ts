@@ -54,7 +54,7 @@ authRouter.post("/login", async (req, res) => {
       userCredentials.userInfoId,
     ),
     {
-      expires: expiresInDays(10),
+      expires: expiresInDays(15),
       signed: true,
       httpOnly: true,
       secure: true,
