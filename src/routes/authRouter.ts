@@ -6,6 +6,7 @@ import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
 
 import UserCredentials from "../models/userCredentialsModel.js";
+import { Sex } from "../models/userInfoModel.js";
 import UserInfo from "../models/userInfoModel.js";
 import {
   areCredentialsValid,
@@ -55,8 +56,8 @@ authRouter.post("/login", async (req, res) => {
     {
       expires: expiresInDays(10),
       signed: true,
-      // httpOnly: true,
-      // secure: true,
+      httpOnly: true,
+      secure: true,
     },
   );
   return res.status(200).json({
@@ -83,7 +84,7 @@ authRouter.post("/register", async (req, res) => {
 
   const userInfo = new UserInfo({
     email: userCredentialsSent.email,
-    sex: "other",
+    sex: Sex.other,
     weightLog: [],
   });
 

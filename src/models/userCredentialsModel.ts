@@ -27,7 +27,7 @@ const userCredentialsSchema = new mongoose.Schema<IUserCredentials>({
   userInfoId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "UserInfo",
-    default: "0",
+    // default: "0",
   }
 });
 
