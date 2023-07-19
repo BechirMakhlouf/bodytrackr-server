@@ -12,10 +12,13 @@ export default function tokenHandlerMiddleware(
     return;
   }
 
-  const userIds: any = jwt.verify(
+  const userIds = jwt.verify(
     req.headers["authorization"].split(" ")[1],
     process.env.SECRET as string,
-  );
+  ) as {
+    userCredentialsId: string;
+    userInfoId: string;
+  };
 
   req.body.userCredentialsId = userIds.userCredentialsId;
   req.body.userInfoId = userIds.userInfoId;

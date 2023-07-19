@@ -74,7 +74,6 @@ authRouter.post("/register", async (req, res) => {
     email: req.body.email,
     password: req.body.password,
   };
-
   if (!areCredentialsValid(userCredentialsSent)) {
     res.status(401).json({ message: "invalid credentials" });
     return;
@@ -102,15 +101,25 @@ authRouter.post("/register", async (req, res) => {
     return;
   }
 
+  res.cookie(
+    "refreshToken",
+    generateRefreshToken(
+      userCredentials._id,
+      userCredentials.userInfoId,
+    ),
+    {
+      expires: expiresInDays(15),
+      signed: true,
+      httpOnly: true,
+      secure: true,
+    },
+  );
   return res.status(200).json({
     accessToken: generateAccessToken(
       userCredentials._id,
       userCredentials.userInfoId,
     ),
-    refreshToken: generateRefreshToken(
-      userCredentials._id,
-      userCredentials.userInfoId,
-    ),
+    refreshTokenCookie: res.getHeader("set-cookie"),
   });
 });
 
