@@ -12,7 +12,10 @@ import errorHandlingMiddleware from "./src/middlewares/errorHandlingMiddlware.js
 const PORT = Number(process.env.PORT) || 6969;
 const app = express();
 
-app.use(cors());
+app.use(cors({
+  origin: process.env.ALLOWED_ORIGIN,
+  credentials: true,
+}));
 app.use(express.json());
 app.use(cookieParser(process.env.COOKIE_SECRET));
 
