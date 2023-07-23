@@ -19,7 +19,7 @@ userInfoRouter.get("/userInfo", async (req, res) => {
 });
 // update user info?
 
-userInfoRouter.patch("/userInfo", async (req, res) => {
+userInfoRouter.post("/userInfo", async (req, res) => {
   const userInfoId = req.body.userInfoId;
 
   await mongoose.connect(process.env.MONGODB_URI as string);

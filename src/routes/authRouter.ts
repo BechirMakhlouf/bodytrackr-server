@@ -46,7 +46,6 @@ authRouter.post("/login", async (req, res) => {
     return res.status(401).json({ message: "invalid email or password" });
   }
 
-  // we are sending the cookie in the response body temporarily be aware! CHANGETHIS!
   res.cookie(
     "refreshToken",
     generateRefreshToken(
@@ -65,7 +64,6 @@ authRouter.post("/login", async (req, res) => {
       userCredentials._id,
       userCredentials.userInfoId,
     ),
-    refreshTokenCookie: res.getHeader("set-cookie"),
   });
 });
 
@@ -119,12 +117,12 @@ authRouter.post("/register", async (req, res) => {
       userCredentials._id,
       userCredentials.userInfoId,
     ),
-    refreshTokenCookie: res.getHeader("set-cookie"),
   });
 });
 
 authRouter.get("/token", async (req, res, next) => {
-  const refreshToken: string = req.cookies.refreshToken;
+  const refreshToken: string = req.signedCookies.refreshToken;
+
   if (!refreshToken) {
     res.status(401);
     next(new Error("No refresh token provided."));

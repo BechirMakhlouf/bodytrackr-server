@@ -16,18 +16,21 @@ interface Weight {
   date: Date;
 }
 
+export interface IUserPreferences {
+  weightUnit?: Unit;
+  lengthUnit?: Unit;
+  darkMode?: boolean;
+}
+
 interface IUserInfo {
   name?: string;
   firstName?: string;
   email: string;
-  sex?: "male" | "female" | "other";
+  sex?: Sex;
   heightCm?: number;
   birthYear?: number;
-  preferences?: {
-    weightUnit?: "metric" | "imperial";
-    lengthUnit?: "metric" | "imperial";
-    darkMode?: boolean;
-  };
+  goalWeight?: number;
+  preferences: IUserPreferences;
   weightLog: Weight[];
 }
 
@@ -53,6 +56,9 @@ const userInfoSchema = new mongoose.Schema<IUserInfo>({
     type: Number,
   },
   birthYear: {
+    type: Number,
+  },
+  goalWeight: {
     type: Number,
   },
   preferences: {
