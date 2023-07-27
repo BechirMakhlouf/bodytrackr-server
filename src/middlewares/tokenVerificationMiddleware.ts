@@ -8,20 +8,25 @@ export default function tokenHandlerMiddleware(
 ) {
   if (!req.headers["authorization"]) {
     res.status(401);
-    next(new Error("Acess Token Required"));
+    next(new Error("Access Token Required"));
     return;
   }
 
-  const userIds = jwt.verify(
-    req.headers["authorization"].split(" ")[1],
-    process.env.SECRET as string,
-  ) as {
-    userCredentialsId: string;
-    userInfoId: string;
-  };
+  try {
+    const userIds = jwt.verify(
+      req.headers["authorization"].split(" ")[1],
+      process.env.SECRET as string,
+    ) as {
+      userCredentialsId: string;
+      userInfoId: string;
+    };
 
-  req.body.userCredentialsId = userIds.userCredentialsId;
-  req.body.userInfoId = userIds.userInfoId;
+    req.body.userCredentialsId = userIds.userCredentialsId;
+    req.body.userInfoId = userIds.userInfoId;
+  } catch (e) {
+    res.status(401);
+    next(new Error("invalid jwt token"));
+  }
 
   next();
 }

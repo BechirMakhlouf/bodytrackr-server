@@ -129,16 +129,21 @@ authRouter.get("/token", async (req, res, next) => {
     return;
   }
 
-  const { userCredentialsId, userInfoId } = jwt.verify(
-    refreshToken,
-    process.env.REFRESH_SECRET as string,
-  ) as jwt.JwtPayload;
+  try {
+    const { userCredentialsId, userInfoId } = jwt.verify(
+      refreshToken,
+      process.env.REFRESH_SECRET as string,
+    ) as jwt.JwtPayload;
 
-  res
-    .status(200)
-    .json({
-      accessToken: generateAccessToken(userCredentialsId, userInfoId),
-    });
+    res
+      .status(200)
+      .json({
+        accessToken: generateAccessToken(userCredentialsId, userInfoId),
+      });
+  } catch (e) {
+    res.status(401).clearCookie("refreshToken");
+    next(new Error((e as Error).message));
+  }
 });
 
 export default authRouter;

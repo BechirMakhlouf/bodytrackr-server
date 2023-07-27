@@ -27,8 +27,8 @@ userInfoRouter.post("/userInfo", async (req, res) => {
   const updatedUserInfo: IUserInfo = req.body;
   // check updatedUserInfo integrity??
   await UserInfo.findByIdAndUpdate(userInfoId, updatedUserInfo);
-  
-  res.status(200).json({ "message": "updated successfully"});
+  console.log(updatedUserInfo);
+  res.status(200).json({ "message": "updated successfully" });
 });
 
 userInfoRouter.post("/userInfo/weightLog", async (req, res) => {
@@ -51,6 +51,22 @@ userInfoRouter.post("/userInfo/weightLog", async (req, res) => {
   await userInfo.save();
 
   res.status(200).send({ weightLog: weightLog });
+});
+
+userInfoRouter.post("/logout", async (req, res) => {
+  const userInfoId = req.body.userInfoId;
+
+  await mongoose.connect(process.env.MONGODB_URI as string);
+
+  const updatedUserInfo: IUserInfo = req.body;
+  // check updatedUserInfo integrity??
+  await UserInfo.findByIdAndUpdate(userInfoId, updatedUserInfo);
+  res.cookie("refreshToken", "", {
+    expires: new Date(0),
+    httpOnly: true,
+    secure: true,
+  });
+  res.status(200).json({ "message": "logged out successfully" });
 });
 
 export default userInfoRouter;
