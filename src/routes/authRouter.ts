@@ -6,7 +6,7 @@ import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
 
 import UserCredentials from "../models/userCredentialsModel.js";
-import { Sex } from "../models/userInfoModel.js";
+import { Sex, Unit } from "../models/userInfoModel.js";
 import UserInfo from "../models/userInfoModel.js";
 import {
   areCredentialsValid,
@@ -17,12 +17,28 @@ import {
 
 const authRouter = Router();
 
+async function verifyCaptchaToken(captchaToken: string): Promise<boolean> {
+  const response = await fetch(
+    `https://www.google.com/recaptcha/api/siteverify?secret=${process.env.CAPTCHA_SECRET}&response=${captchaToken}`,
+    {
+      method: "POST",
+    },
+  );
+  return (await response.json()).success;
+}
+
 authRouter.post("/login", async (req, res) => {
   const userCredentialsSent = {
     email: req.body.email,
     password: req.body.password,
   };
-
+  const captchaTokenSent = req.body.captchaToken;
+  if (!(await verifyCaptchaToken(captchaTokenSent))) {
+    res.status(401).json({
+      message: "captcha is invalid",
+    });
+    return;
+  }
   if (!areCredentialsValid(userCredentialsSent)) {
     return res.status(401).json({ message: "credentials are invalid!" });
   }
@@ -72,6 +88,15 @@ authRouter.post("/register", async (req, res) => {
     email: req.body.email,
     password: req.body.password,
   };
+
+  const captchaTokenSent = req.body.captchaToken;
+  if (!(await verifyCaptchaToken(captchaTokenSent))) {
+    res.status(401).json({
+      message: "captcha is invalid",
+    });
+    return;
+  }
+
   if (!areCredentialsValid(userCredentialsSent)) {
     res.status(401).json({ message: "invalid credentials" });
     return;
@@ -83,6 +108,16 @@ authRouter.post("/register", async (req, res) => {
     email: userCredentialsSent.email,
     sex: Sex.Other,
     weightLog: [],
+    name: "",
+    firstName: "",
+    heightCm: 0,
+    birthYear: 0,
+    goalWeight: 0,
+    preferences: {
+      darkMode: false,
+      lengthUnit: Unit.Metric,
+      weightUnit: Unit.Metric,
+    },
   });
 
   const userCredentials = new UserCredentials({

@@ -8,6 +8,10 @@ interface IUserCredentials {
   userInfoId: mongoose.Types.ObjectId;
 }
 
+export interface IUserCredentialswithCaptcha extends IUserCredentials {
+  captchaToken: string;
+}
+
 const userCredentialsSchema = new mongoose.Schema<IUserCredentials>({
   email: {
     type: String,
@@ -32,5 +36,6 @@ const userCredentialsSchema = new mongoose.Schema<IUserCredentials>({
 });
 
 const UserCredentials = mongoose.model<IUserCredentials>("UserCredentials", userCredentialsSchema);
+
 
 export default UserCredentials;
