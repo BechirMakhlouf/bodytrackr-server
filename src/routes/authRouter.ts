@@ -14,6 +14,7 @@ import {
   generateAccessToken,
   generateRefreshToken,
 } from "../utils/authUtils.js";
+import { ObjectId } from "mongodb";
 
 const authRouter = Router();
 
@@ -24,6 +25,7 @@ async function verifyCaptchaToken(captchaToken: string): Promise<boolean> {
       method: "POST",
     },
   );
+
   return (await response.json()).success;
 }
 
@@ -32,13 +34,16 @@ authRouter.post("/login", async (req, res) => {
     email: req.body.email,
     password: req.body.password,
   };
+
   const captchaTokenSent = req.body.captchaToken;
+
   if (!(await verifyCaptchaToken(captchaTokenSent))) {
     res.status(401).json({
       message: "captcha is invalid",
     });
     return;
   }
+
   if (!areCredentialsValid(userCredentialsSent)) {
     return res.status(401).json({ message: "credentials are invalid!" });
   }
@@ -153,6 +158,129 @@ authRouter.post("/register", async (req, res) => {
       userCredentials.userInfoId,
     ),
   });
+});
+
+authRouter.post("/oauth/google", async (req, res) => {
+  const googleOauthCredentials: {
+    clientId: string;
+    credential: string;
+    select_by: string;
+  } = req.body;
+
+  const credentialResponse: any = jwt.decode(googleOauthCredentials.credential);
+  req.body.email = credentialResponse.email;
+  req.body.password = credentialResponse.sub;
+
+  const userCredentialsSent = {
+    email: credentialResponse.email,
+    password: credentialResponse.sub,
+  };
+
+  const userCredentialsId: { _id: ObjectId } | null = await UserCredentials
+    .exists({
+      email: credentialResponse.email,
+    });
+
+  try {
+    if (userCredentialsId) {
+      const userCredentials = await UserCredentials.findById(userCredentialsId);
+
+      bcrypt.compare(
+        userCredentialsSent.password,
+        userCredentials?.password as string,
+      );
+
+      if (!areCredentialsValid(userCredentialsSent)) {
+        return res.status(401).json({ message: "credentials are invalid!" });
+      }
+
+      await mongooseConnect(process.env.MONGODB_URI as string);
+
+      if (!userCredentials) {
+        return res.status(401).json({ message: "invalid email or password" });
+      }
+
+      const isPasswordCorrect = await bcrypt.compare(
+        userCredentialsSent.password,
+        userCredentials.password,
+      );
+
+      if (!isPasswordCorrect) {
+        return res.status(401).json({ message: "invalid email or password" });
+      }
+
+      res.cookie(
+        "refreshToken",
+        generateRefreshToken(
+          userCredentials._id,
+          userCredentials.userInfoId,
+        ),
+        {
+          expires: expiresInDays(15),
+          signed: true,
+          httpOnly: true,
+          secure: true,
+        },
+      );
+      return res.status(200).json({
+        accessToken: generateAccessToken(
+          userCredentials._id,
+          userCredentials.userInfoId,
+        ),
+      });
+    }
+    await mongooseConnect(process.env.MONGODB_URI as string);
+
+    const userInfo = new UserInfo({
+      email: userCredentialsSent.email,
+      sex: Sex.Other,
+      weightLog: [],
+      name: "",
+      firstName: "",
+      heightCm: 0,
+      birthYear: 0,
+      goalWeight: 0,
+      preferences: {
+        darkMode: false,
+        lengthUnit: Unit.Metric,
+        weightUnit: Unit.Metric,
+      },
+    });
+
+    const userCredentials = new UserCredentials({
+      email: userCredentialsSent.email,
+      password: await bcrypt.hash(userCredentialsSent.password, 10),
+      userInfoId: userInfo._id,
+    });
+    await userCredentials.save();
+    await userInfo.save();
+
+    res.cookie(
+      "refreshToken",
+      generateRefreshToken(
+        userCredentials._id,
+        userCredentials.userInfoId,
+      ),
+      {
+        expires: expiresInDays(15),
+        signed: true,
+        httpOnly: true,
+        secure: true,
+      },
+    );
+    return res.status(200).json({
+      accessToken: generateAccessToken(
+        userCredentials._id,
+        userCredentials.userInfoId,
+      ),
+    });
+  } catch (e) {
+    res.status(400).json(
+      {
+        message: (e as Error).message,
+      },
+    );
+  }
 });
 
 authRouter.get("/token", async (req, res, next) => {
